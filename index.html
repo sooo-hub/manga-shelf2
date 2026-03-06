@@ -892,14 +892,14 @@ function renderStats() {
   `;
 }
 
-function setFilter(mode) {
+window.setFilter = function(mode) {
   filterMode = mode;
   renderList();
   renderStats();
 }
 
 // ===================== SORT =====================
-function cycleSort() {
+window.cycleSort = function() {
   sortMode = (sortMode + 1) % sortModes.length;
   document.getElementById('sortLabel').textContent = sortModes[sortMode];
   renderList();
@@ -929,7 +929,6 @@ function renderList() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   let list = mangas;
 
-  // search
   if (q) {
     list = list.filter(m =>
       (m.title || '').toLowerCase().includes(q) ||
@@ -937,7 +936,6 @@ function renderList() {
     );
   }
 
-  // filter
   if (filterMode === 'incomplete') {
     list = list.filter(m => {
       if (!m.latest) return false;
@@ -969,7 +967,6 @@ function renderCard(m) {
   const ownedCount = Object.values(vols).filter(v => v === 'owned').length;
   const wishCount = Object.values(vols).filter(v => v === 'wish').length;
 
-  // generate volume dots
   let volDots = '';
   const maxShow = 18;
   const totalVols = Math.max(latest, ...Object.keys(vols).map(Number).filter(Boolean), 1);
@@ -1021,22 +1018,20 @@ function renderCard(m) {
 }
 
 // ===================== QUICK TOGGLE =====================
-function quickToggleVol(id, vol) {
+window.quickToggleVol = function(id, vol) {
   const m = mangas.find(x => x.id === id);
   if (!m) return;
   if (!m.volumes) m.volumes = {};
   const cur = m.volumes[vol] || 'none';
-  // cycle: none -> owned -> wish -> none
   m.volumes[vol] = cur === 'none' ? 'owned' : cur === 'owned' ? 'wish' : 'none';
   m.updatedAt = Date.now();
-  // Update just this manga in Firebase
   update(ref(db, 'mangas/' + id), { volumes: m.volumes, updatedAt: m.updatedAt });
   renderList();
   renderStats();
 }
 
 // ===================== OPEN BD API =====================
-async function searchOpenBD() {
+window.searchOpenBD = async function() {
   const title = document.getElementById('inputTitle').value.trim();
   if (!title) { showToast('タイトルを入力してください'); return; }
 
@@ -1045,8 +1040,6 @@ async function searchOpenBD() {
   label.innerHTML = '<div class="spinner"></div> 検索中...';
 
   try {
-    // Search via Open BD (search by title using a proxy-free approach with ISBN lookup)
-    // We'll use the openbd search endpoint
     const resp = await fetch(`https://api.openbd.jp/v1/search?title=${encodeURIComponent(title)}&limit=10`);
     const data = await resp.json();
 
@@ -1056,7 +1049,6 @@ async function searchOpenBD() {
       return;
     }
 
-    // Show top results as a picker
     const items = data.slice(0, 6);
     area.innerHTML = items.map((book, i) => {
       const summary = book.summary || {};
@@ -1082,7 +1074,7 @@ async function searchOpenBD() {
   label.innerHTML = '📚 Open BDで書誌情報を取得';
 }
 
-function selectBook(i) {
+window.selectBook = function(i) {
   const el = document.getElementById(`searchRes-${i}`);
   if (!el) return;
   const cover = el.dataset.cover;
@@ -1108,7 +1100,7 @@ function selectBook(i) {
 }
 
 // ===================== REFRESH LATEST =====================
-async function refreshLatest(id) {
+window.refreshLatest = async function(id) {
   const m = mangas.find(x => x.id === id);
   if (!m || !m.title) { showToast('タイトルが設定されていません'); return; }
 
@@ -1120,11 +1112,9 @@ async function refreshLatest(id) {
 
     if (!data || data.length === 0) { showToast('情報を取得できませんでした'); return; }
 
-    // Try to find volumes and get max volume number
     let maxVol = 0;
     data.forEach(book => {
       const t = (book.summary?.title || '');
-      // match patterns like "12巻", "第12巻", "(12)"
       const match = t.match(/[（(]?(\d+)[)）]?巻|第(\d+)巻|\s(\d+)$/);
       if (match) {
         const n = parseInt(match[1] || match[2] || match[3]);
@@ -1179,19 +1169,19 @@ function cycleEditorVol(vol) {
   updateVolEditor();
 }
 
-function setAllOwned() {
+window.setAllOwned = function() {
   const latest = parseInt(document.getElementById('inputLatest').value) || 0;
   for (let i = 1; i <= latest; i++) editVolState[i] = 'owned';
   updateVolEditor();
 }
 
-function clearAllOwned() {
+window.clearAllOwned = function() {
   editVolState = {};
   updateVolEditor();
 }
 
 // ===================== MODAL =====================
-function openAddModal() {
+window.openAddModal = function() {
   document.getElementById('modalTitle').textContent = 'マンガを追加';
   document.getElementById('inputTitle').value = '';
   document.getElementById('inputAuthor').value = '';
@@ -1205,10 +1195,10 @@ function openAddModal() {
   editVolState = {};
   updateVolEditor();
   document.getElementById('modalOverlay').classList.add('open');
-  document.getElementById('inputTitle').focus();
+  setTimeout(() => document.getElementById('inputTitle').focus(), 300);
 }
 
-function openEditModal(id) {
+window.openEditModal = function(id) {
   const m = mangas.find(x => x.id === id);
   if (!m) return;
 
@@ -1222,7 +1212,6 @@ function openEditModal(id) {
   document.getElementById('editingId').value = id;
   document.getElementById('btnDelete').style.display = 'block';
 
-  // show cover
   const area = document.getElementById('searchResultArea');
   if (m.coverUrl) {
     area.innerHTML = `<img src="${m.coverUrl}" class="search-result-cover"><div class="search-result-info"><div class="title">${escHtml(m.title)}</div><div class="meta">${escHtml(m.author || '')}</div></div>`;
@@ -1235,23 +1224,21 @@ function openEditModal(id) {
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-function closeModal() {
+window.closeModal = function() {
   document.getElementById('modalOverlay').classList.remove('open');
 }
 
-function handleOverlayClick(e) {
+window.handleOverlayClick = function(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 }
 
 // ===================== SAVE =====================
-function saveManga() {
+window.saveManga = function() {
   const title = document.getElementById('inputTitle').value.trim();
   if (!title) { showToast('タイトルを入力してください'); document.getElementById('inputTitle').focus(); return; }
 
   const editingId = document.getElementById('editingId').value;
   const latest = parseInt(document.getElementById('inputLatest').value) || 0;
-
-  // Merge editVolState (keep existing state for vols beyond latest)
   const volumes = { ...editVolState };
 
   if (editingId) {
@@ -1285,19 +1272,16 @@ function saveManga() {
   }
 
   saveData(mangas);
-  renderList();
-  renderStats();
   closeModal();
   showToast(editingId ? '更新しました ✓' : '追加しました ✓');
 }
 
 // ===================== DELETE =====================
-function deleteManga() {
+window.deleteManga = function() {
   const id = document.getElementById('editingId').value;
   if (!id) return;
   if (!confirm('この作品を削除しますか？')) return;
   mangas = mangas.filter(x => x.id !== id);
-  // Remove from Firebase directly
   remove(ref(db, 'mangas/' + id)).catch(e => showToast('削除エラー'));
   renderList();
   renderStats();
@@ -1323,10 +1307,10 @@ function showToast(msg) {
 
 // Update vol editor when latest input changes
 document.getElementById('inputLatest').addEventListener('input', updateVolEditor);
+document.getElementById('searchInput').addEventListener('input', renderList);
 
 // ===================== INIT =====================
 // Data loads via Firebase onValue listener above
-// Show loading until connected
 </script>
 
 </body>
