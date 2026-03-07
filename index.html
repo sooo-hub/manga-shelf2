@@ -4,76 +4,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>API テスト</title>
+<title>API テスト v2</title>
 <style>
 body { font-family: -apple-system, sans-serif; padding: 20px; background: #f2f2f7; }
 button { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; background: #007aff; color: white; }
 button:active { opacity: 0.7; }
-.result { background: white; border-radius: 12px; padding: 14px; margin: 8px 0; font-size: 13px; white-space: pre-wrap; word-break: break-all; min-height: 60px; color: #333; }
+.result { background: white; border-radius: 12px; padding: 14px; margin: 8px 0; font-size: 13px; white-space: pre-wrap; word-break: break-all; min-height: 60px; color: #333; line-height: 1.6; }
 .ok { border-left: 4px solid #34c759; }
 .ng { border-left: 4px solid #ff3b30; }
-h2 { font-size: 18px; margin: 16px 0 4px; }
+h2 { font-size: 17px; margin: 16px 0 4px; font-weight: 700; }
 </style>
 </head>
 <body>
-<h1>📡 API 疎通テスト</h1>
-<p style="color:#888;font-size:13px">ワンピースで各APIをテスト</p>
+<h1>📡 API テスト v2</h1>
+<p style="color:#888;font-size:13px;margin-bottom:4px">ワンピースで検索</p>
 
-<h2>① Google Books</h2>
-<button onclick="testGoogle()">テスト実行</button>
+<h2>① Google Books（修正版）</h2>
+<button onclick="testGoogle()">テスト</button>
 <div class="result" id="r1">未実行</div>
 
-<h2>② Open BD (openbd.jp)</h2>
-<button onclick="testOpenBD()">テスト実行</button>
+<h2>② NDL（XMLパース修正版）</h2>
+<button onclick="testNDL()">テスト</button>
 <div class="result" id="r2">未実行</div>
-
-<h2>③ NDL (国立国会図書館)</h2>
-<button onclick="testNDL()">テスト実行</button>
-<div class="result" id="r3">未実行</div>
 
 <script>
 async function testGoogle() {
   const el = document.getElementById('r1');
   el.textContent = '通信中...'; el.className = 'result';
   try {
-    const r = await fetch('https://www.googleapis.com/books/v1/volumes?q=ワンピース&langRestrict=ja&maxResults=3');
+    const url = 'https://www.googleapis.com/books/v1/volumes?q=intitle:%E3%83%AF%E3%83%B3%E3%83%94%E3%83%BC%E3%82%B9&maxResults=5&printType=books';
+    const r = await fetch(url);
     const d = await r.json();
-    const titles = (d.items||[]).map(i=>i.volumeInfo?.title).join('\n');
-    el.textContent = `✅ 成功！ ${(d.items||[]).length}件\n${titles||'(タイトル取得失敗)'}`;
+    const items = d.items || [];
+    if (!items.length) {
+      el.textContent = '⚠️ 0件。totalItems=' + d.totalItems;
+      el.className = 'result ng';
+      return;
+    }
+    const lines = items.map(i => {
+      const v = i.volumeInfo || {};
+      return '📗 ' + v.title + ' / ' + (v.authors||[]).join(',');
+    }).join('\n');
+    el.textContent = '✅ ' + items.length + '件ヒット！\n' + lines;
     el.className = 'result ok';
   } catch(e) {
-    el.textContent = '❌ 失敗: ' + e.message;
-    el.className = 'result ng';
-  }
-}
-
-async function testOpenBD() {
-  const el = document.getElementById('r2');
-  el.textContent = '通信中...'; el.className = 'result';
-  try {
-    const r = await fetch('https://api.openbd.jp/v1/search?title=ワンピース&limit=3');
-    const d = await r.json();
-    const titles = (d||[]).map(i=>i.summary?.title).filter(Boolean).join('\n');
-    el.textContent = `✅ 成功！ ${(d||[]).length}件\n${titles||'(タイトル取得失敗)'}`;
-    el.className = 'result ok';
-  } catch(e) {
-    el.textContent = '❌ 失敗: ' + e.message;
+    el.textContent = '❌ ' + e.message;
     el.className = 'result ng';
   }
 }
 
 async function testNDL() {
-  const el = document.getElementById('r3');
+  const el = document.getElementById('r2');
   el.textContent = '通信中...'; el.className = 'result';
   try {
-    const r = await fetch('https://ndlsearch.ndl.go.jp/api/opensearch?q=ワンピース&cnt=3&mediatype=Book');
+    const url = 'https://ndlsearch.ndl.go.jp/api/opensearch?q=%E3%83%AF%E3%83%B3%E3%83%94%E3%83%BC%E3%82%B9&cnt=5&mediatype=Book';
+    const r = await fetch(url);
     const text = await r.text();
     const xml = new DOMParser().parseFromString(text, 'application/xml');
-    const titles = [...xml.querySelectorAll('item title')].map(t=>t.textContent).join('\n');
-    el.textContent = `✅ 成功！\n${titles||'(タイトル取得失敗)'}`;
+    const items = xml.getElementsByTagName('item');
+    if (!items.length) {
+      el.textContent = '⚠️ item要素なし\n生データ先頭:\n' + text.slice(0, 200);
+      el.className = 'result ng';
+      return;
+    }
+    const lines = [];
+    for (let i = 0; i < Math.min(items.length, 5); i++) {
+      const t = items[i].getElementsByTagName('title')[0];
+      lines.push('📗 ' + (t ? t.textContent : '(不明)'));
+    }
+    el.textContent = '✅ ' + items.length + '件！\n' + lines.join('\n');
     el.className = 'result ok';
   } catch(e) {
-    el.textContent = '❌ 失敗: ' + e.message;
+    el.textContent = '❌ ' + e.message;
     el.className = 'result ng';
   }
 }
