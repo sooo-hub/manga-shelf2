@@ -487,7 +487,8 @@ window.searchBooks = async () => {
   sr.className = 's-results'; sr.innerHTML = '';
 
   try {
-    const url = 'https://ndlsearch.ndl.go.jp/api/opensearch?q=' + encodeURIComponent(title) + '&cnt=10';
+    // title= で絞り込み、q= をキーワードとして併用
+    const url = 'https://ndlsearch.ndl.go.jp/api/opensearch?q=title%3A' + encodeURIComponent(title) + '&cnt=10';
     const resp = await fetch(url);
     const text = await resp.text();
 
@@ -575,7 +576,7 @@ window.refreshLatest = async id => {
   const m = mangas.find(x=>x.id===id); if (!m||!m.title) { toast('タイトルが設定されていません'); return; }
   toast('🔄 確認中...');
   try {
-    const resp = await fetch('https://ndlsearch.ndl.go.jp/api/opensearch?q=' + encodeURIComponent(m.title) + '&cnt=50');
+    const resp = await fetch('https://ndlsearch.ndl.go.jp/api/opensearch?q=title%3A' + encodeURIComponent(m.title) + '&cnt=50');
     const text = await resp.text();
     const results = parseNDLText(text);
     let max = 0;
