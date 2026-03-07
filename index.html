@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>検索テスト v4</title>
+<title>OpenBD テスト</title>
 <style>
 body { font-family: -apple-system, sans-serif; padding: 20px; background: #f2f2f7; }
 input { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 16px; margin-bottom: 8px; box-sizing: border-box; }
@@ -13,36 +13,55 @@ pre { background: white; border-radius: 10px; padding: 12px; white-space: pre-wr
 </style>
 </head>
 <body>
-<h2>🔍 タイトル絞り込みテスト</h2>
-<input type="text" id="q" value="ワンピース" placeholder="タイトル">
-<button onclick="t('q=title%3A{q}&cnt=5')">① q=title:ワンピース</button>
-<button onclick="t('q={q}&title={q}&cnt=5')">② q=ワンピース&title=ワンピース</button>
-<button onclick="t('title={q}&cnt=5')">③ title=ワンピース のみ</button>
-<button onclick="t('q={q}&any={q}&cnt=5')">④ q=ワンピース&any=ワンピース</button>
+<h2>OpenBD + Google Books テスト</h2>
+<input type="text" id="q" value="ワンピース 尾田栄一郎" placeholder="タイトル">
+
+<button onclick="testOpenBD()">① OpenBD /search （キーワード）</button>
+<button onclick="testGoogle()">② Google Books（制限なし）</button>
+<button onclick="testRakuten()">③ 楽天ブックスAPI</button>
+
 <pre id="out">ボタンを押してください</pre>
 
 <script>
-async function t(pattern) {
-  const q = document.getElementById('q').value;
-  const out = document.getElementById('out');
-  const params = pattern.replace(/{q}/g, encodeURIComponent(q));
-  const url = 'https://ndlsearch.ndl.go.jp/api/opensearch?' + params;
-  out.textContent = 'URL: ' + url + '\n\n通信中...';
+const out = () => document.getElementById('out');
+const q = () => document.getElementById('q').value.trim();
+
+async function testOpenBD() {
+  out().textContent = '通信中...';
   try {
+    // OpenBD search API
+    const url = 'https://api.openbd.jp/v1/search?title=' + encodeURIComponent(q()) + '&limit=5';
+    out().textContent = 'URL: ' + url + '\n\n';
     const r = await fetch(url);
     const text = await r.text();
-    const total = (text.match(/<openSearch:totalResults>(\d+)/) || [])[1] || '?';
-    // itemのtitleだけ抽出
-    const titles = [];
-    const re = /<item>[\s\S]*?<title>([\s\S]*?)<\/title>/g;
-    let m;
-    while ((m = re.exec(text)) !== null && titles.length < 5) {
-      titles.push(m[1].trim());
-    }
-    out.textContent = 'URL: ' + url + '\n\ntotal: ' + total + '\nタイトル:\n' + (titles.join('\n') || '(なし)');
-  } catch(e) {
-    out.textContent = 'エラー: ' + e.message;
-  }
+    out().textContent += 'Status: ' + r.status + '\n先頭500文字:\n' + text.slice(0,500);
+  } catch(e) { out().textContent = 'エラー: ' + e.message; }
+}
+
+async function testGoogle() {
+  out().textContent = '通信中...';
+  try {
+    // Google Books - no langRestrict, simple q
+    const url = 'https://www.googleapis.com/books/v1/volumes?q=' + encodeURIComponent(q()) + '&maxResults=5';
+    out().textContent = 'URL: ' + url + '\n\n';
+    const r = await fetch(url);
+    const d = await r.json();
+    const items = d.items || [];
+    const titles = items.map(i => (i.volumeInfo?.title || '') + ' / ' + (i.volumeInfo?.authors||[]).join(','));
+    out().textContent += 'total: ' + d.totalItems + '\nタイトル:\n' + (titles.join('\n') || '(なし)');
+  } catch(e) { out().textContent = 'エラー: ' + e.message; }
+}
+
+async function testRakuten() {
+  out().textContent = '通信中...';
+  try {
+    // 楽天ブックス書籍API（applicationId不要のテスト）
+    const url = 'https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?format=json&title=' + encodeURIComponent(q()) + '&applicationId=1001';
+    out().textContent = 'URL: ' + url + '\n\n';
+    const r = await fetch(url);
+    const text = await r.text();
+    out().textContent += 'Status: ' + r.status + '\n先頭300文字:\n' + text.slice(0,300);
+  } catch(e) { out().textContent = 'エラー: ' + e.message; }
 }
 </script>
 
