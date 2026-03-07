@@ -4,35 +4,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>検索テスト</title>
+<title>検索テスト v3</title>
 <style>
 body { font-family: -apple-system, sans-serif; padding: 20px; background: #f2f2f7; }
-input { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 16px; margin-bottom: 8px; }
-button { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; background: #007aff; color: white; margin-bottom: 8px; }
-pre { background: white; border-radius: 10px; padding: 12px; white-space: pre-wrap; word-break: break-all; font-size: 12px; line-height: 1.5; }
+input { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 16px; margin-bottom: 8px; box-sizing: border-box; }
+button { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; background: #007aff; color: white; margin-bottom: 6px; }
+pre { background: white; border-radius: 10px; padding: 12px; white-space: pre-wrap; word-break: break-all; font-size: 11px; line-height: 1.5; margin-bottom: 8px; }
+h3 { margin: 8px 0 4px; font-size: 14px; }
 </style>
 </head>
 <body>
-<h2>🔍 検索テスト</h2>
+<h2>🔍 検索テスト v3</h2>
 <input type="text" id="q" value="ワンピース" placeholder="タイトル">
-<button onclick="go()">検索してRAWデータ表示</button>
-<pre id="out">ここに結果が出ます</pre>
+<button onclick="test('mediatype=Book')">① mediatype=Book（現在の設定）</button>
+<button onclick="test('')">② mediatypeなし（全種類）</button>
+<button onclick="test('mediatype=Comic')">③ mediatype=Comic</button>
+<button onclick="test('mediatype=Book&title=ワンピース')">④ titleパラメータ</button>
+<pre id="out">ボタンを押してください</pre>
+
 <script>
-async function go() {
+async function test(extra) {
   const q = document.getElementById('q').value;
   const out = document.getElementById('out');
   out.textContent = '通信中...';
   try {
-    const url = 'https://ndlsearch.ndl.go.jp/api/opensearch?q=' + encodeURIComponent(q) + '&cnt=3&mediatype=Book';
-    out.textContent = 'URL: ' + url + '\n\n取得中...';
+    let url = 'https://ndlsearch.ndl.go.jp/api/opensearch?q=' + encodeURIComponent(q) + '&cnt=3';
+    if (extra) url += '&' + extra;
     const r = await fetch(url);
-    out.textContent += '\nステータス: ' + r.status + '\n\n';
     const text = await r.text();
-    out.textContent += '--- 先頭800文字 ---\n' + text.slice(0, 800);
+    // totalResultsだけ抜く
+    const total = text.match(/<openSearch:totalResults>(\d+)<\/openSearch:totalResults>/);
+    const items = (text.match(/<item>/g) || []).length;
+    out.textContent = 'URL: ' + url + '\n\ntotalResults: ' + (total ? total[1] : '不明') + '\nitem数: ' + items + '\n\n先頭600文字:\n' + text.slice(0, 600);
   } catch(e) {
     out.textContent = 'エラー: ' + e.message;
   }
 }
 </script>
+
 </body>
 </html>
