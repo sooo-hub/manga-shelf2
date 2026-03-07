@@ -3,797 +3,338 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="本棚">
-<title>本棚 — マンガ管理</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>本棚</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
-  --ink: #1a1209;
-  --paper: #faf6ee;
-  --cream: #f0e9d8;
-  --aged: #d4c9a8;
-  --accent: #c0392b;
-  --accent2: #8b6914;
-  --spine: #2c1810;
-  --owned: #2d6a4f;
-  --missing: #e8d5a3;
-  --wish: #7b4a9e;
-  --shadow: rgba(26,18,9,0.15);
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --owned: #34c759;
+  --wish: #af52de;
+  --accent: #ff3b30;
+  --blue: #007aff;
+  --text: #1c1c1e;
+  --sub: #8e8e93;
+  --sep: #e5e5ea;
 }
-
-- { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
 body {
-background: var(–paper);
-color: var(–ink);
-font-family: ‘Noto Sans JP’, sans-serif;
-min-height: 100vh;
-min-height: -webkit-fill-available;
-overscroll-behavior: none;
-}
-
-/* Texture overlay */
-body::before {
-content: ‘’;
-position: fixed;
-inset: 0;
-background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘300’ height=‘300’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3CfeColorMatrix type=‘saturate’ values=‘0’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
-pointer-events: none;
-z-index: 1000;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP', -apple-system, sans-serif;
+  min-height: 100vh;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
 
 /* HEADER */
-header {
-background: var(–spine);
-color: var(–paper);
-padding: 16px 20px 12px;
-position: sticky;
-top: 0;
-z-index: 100;
-box-shadow: 0 3px 20px rgba(0,0,0,0.4);
+.header {
+background: rgba(242,242,247,0.9);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border-bottom: 0.5px solid var(–sep);
+position: sticky; top: 0; z-index: 50;
+padding: calc(12px + env(safe-area-inset-top,0px)) 16px 10px;
 }
-
-.header-top {
-display: flex;
-align-items: center;
-justify-content: space-between;
-margin-bottom: 12px;
-}
-
-.header-title {
-font-family: ‘Noto Serif JP’, serif;
-font-weight: 900;
-font-size: 22px;
-letter-spacing: 0.1em;
-color: var(–aged);
-}
-
-.header-title span {
-color: var(–accent);
-font-size: 13px;
-display: block;
-letter-spacing: 0.2em;
-font-family: ‘Noto Sans JP’, sans-serif;
-font-weight: 300;
-margin-bottom: 2px;
-}
-
+.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.app-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
 .btn-add {
-background: var(–accent);
-color: white;
-border: none;
-border-radius: 50%;
-width: 42px;
-height: 42px;
-font-size: 24px;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-box-shadow: 0 2px 8px rgba(192,57,43,0.4);
-transition: transform 0.15s, box-shadow 0.15s;
+width: 36px; height: 36px;
+background: var(–blue); border: none; border-radius: 50%;
+color: white; font-size: 22px; cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+box-shadow: 0 2px 8px rgba(0,122,255,0.3);
 }
-.btn-add:active { transform: scale(0.92); box-shadow: none; }
-
-/* SEARCH & SORT */
-.controls {
-display: flex;
-gap: 8px;
-align-items: center;
+.btn-add:active { opacity: 0.75; transform: scale(0.92); }
+.search-wrap { position: relative; }
+.search-wrap input {
+width: 100%; padding: 8px 12px 8px 32px;
+background: rgba(118,118,128,0.12); border: none; border-radius: 10px;
+font-size: 15px; font-family: inherit; color: var(–text); outline: none;
 }
+.search-wrap input::placeholder { color: var(–sub); }
+.search-ico { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 13px; pointer-events: none; }
 
-.search-wrap {
-flex: 1;
-position: relative;
+/* TABS */
+.tabs { display: flex; gap: 6px; padding: 10px 16px 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex-shrink: 0; background: var(–card); border: none; border-radius: 20px; padding: 5px 14px; font-size: 13px; font-family: inherit; color: var(–sub); font-weight: 500; cursor: pointer; }
+.tab.on { background: var(–blue); color: white; }
+
+/* STATS */
+.stats { display: flex; gap: 8px; padding: 4px 16px 8px; }
+.stat { flex: 1; background: var(–card); border-radius: 12px; padding: 10px; text-align: center; }
+.stat-n { font-size: 22px; font-weight: 700; }
+.stat-l { font-size: 11px; color: var(–sub); margin-top: 1px; }
+
+/* SORT */
+.sort-row { display: flex; justify-content: flex-end; padding: 0 16px 4px; }
+.sort-btn { background: none; border: none; font-size: 13px; color: var(–blue); font-family: inherit; cursor: pointer; padding: 4px 0; }
+
+/* LIST */
+main { padding: 0 16px 20px; }
+.empty { text-align: center; padding: 80px 20px; color: var(–sub); }
+.empty .ico { font-size: 52px; margin-bottom: 12px; }
+.empty p { font-size: 15px; line-height: 1.7; }
+
+/* CARD */
+.card { background: var(–card); border-radius: 16px; margin-bottom: 10px; overflow: hidden; }
+.card-body { display: flex; gap: 12px; padding: 12px 12px 8px; }
+.cover {
+width: 62px; height: 88px; border-radius: 8px; flex-shrink: 0;
+background: linear-gradient(145deg,#3a3a3c,#1c1c1e);
+display: flex; align-items: center; justify-content: center;
+font-size: 26px; overflow: hidden;
+box-shadow: 2px 2px 8px rgba(0,0,0,0.18);
 }
+.cover img { width: 100%; height: 100%; object-fit: cover; }
+.card-info { flex: 1; min-width: 0; }
+.card-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+.card-author { font-size: 12px; color: var(–sub); margin-bottom: 7px; }
 
-.search-wrap::before {
-content: ‘🔍’;
-position: absolute;
-left: 10px;
-top: 50%;
-transform: translateY(-50%);
-font-size: 13px;
-opacity: 0.6;
+.prog-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.prog-owned { font-size: 13px; font-weight: 600; color: var(–owned); }
+.prog-total { font-size: 11px; color: var(–sub); }
+.prog-bar { height: 3px; background: var(–sep); border-radius: 2px; margin-bottom: 6px; }
+.prog-fill { height: 100%; background: var(–owned); border-radius: 2px; }
+
+.vols { display: flex; flex-wrap: wrap; gap: 3px; }
+.vb {
+width: 26px; height: 26px; border-radius: 6px;
+border: 1.5px solid var(–sep); background: var(–bg);
+font-size: 9px; font-weight: 700; color: var(–sub);
+cursor: pointer; display: flex; align-items: center; justify-content: center;
+font-family: inherit;
 }
+.vb:active { transform: scale(0.82); }
+.vb.o { background: var(–owned); border-color: var(–owned); color: white; }
+.vb.w { background: rgba(175,82,222,0.12); border-color: var(–wish); border-style: dashed; color: var(–wish); }
+.vb-more { width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid var(–sep); background: var(–bg); font-size: 9px; color: var(–sub); cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; }
 
-input[type=“search”] {
-width: 100%;
-padding: 8px 10px 8px 32px;
-border: 1.5px solid var(–aged);
-border-radius: 8px;
-background: rgba(255,255,255,0.1);
-color: var(–paper);
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 14px;
-outline: none;
+.card-meta { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 12px 8px; }
+.m-tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: var(–bg); color: var(–sub); }
+.m-tag.loc { color: #ff9500; }
+.m-tag.wsh { color: var(–wish); }
+
+.card-btns { display: flex; border-top: 0.5px solid var(–sep); }
+.c-btn { flex: 1; background: none; border: none; padding: 10px 0; font-size: 12px; color: var(–blue); cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 3px; }
+.c-btn:active { background: var(–bg); }
+.c-btn + .c-btn { border-left: 0.5px solid var(–sep); }
+
+/* MODAL */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: flex-end; }
+.overlay.on { display: flex; }
+.sheet {
+background: #f2f2f7; width: 100%; border-radius: 12px 12px 0 0;
+max-height: 94vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+animation: up 0.26s cubic-bezier(0.25,0.46,0.45,0.94);
+padding-bottom: calc(16px + env(safe-area-inset-bottom,0px));
 }
-input[type=“search”]::placeholder { color: rgba(240,233,216,0.4); }
-input[type=“search”]:focus { border-color: var(–accent); background: rgba(255,255,255,0.15); }
+@keyframes up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-.sort-btn {
-background: rgba(255,255,255,0.1);
-border: 1.5px solid var(–aged);
-color: var(–aged);
-border-radius: 8px;
-padding: 8px 10px;
-font-size: 12px;
-cursor: pointer;
-white-space: nowrap;
-font-family: ‘Noto Sans JP’, sans-serif;
-transition: background 0.15s;
+.mnav {
+display: flex; align-items: center; justify-content: space-between;
+padding: 14px 16px 10px; position: sticky; top: 0;
+background: #f2f2f7; z-index: 1;
+border-bottom: 0.5px solid var(–sep);
 }
-.sort-btn:active { background: rgba(255,255,255,0.2); }
+.mnav-title { font-size: 17px; font-weight: 600; }
+.mnav-btn { background: none; border: none; font-size: 16px; color: var(–blue); font-family: inherit; cursor: pointer; padding: 4px 2px; }
+.mnav-btn.save { font-weight: 700; }
 
-/* STATS BAR */
-.stats-bar {
-display: flex;
-gap: 4px;
-padding: 8px 16px;
-background: var(–cream);
-border-bottom: 1px solid var(–aged);
-overflow-x: auto;
--webkit-overflow-scrolling: touch;
+/* FORM GROUPS */
+.fsec { background: white; border-radius: 12px; margin: 12px 16px 0; overflow: hidden; }
+.frow {
+display: flex; align-items: center;
+padding: 11px 16px; min-height: 44px;
+border-bottom: 0.5px solid var(–sep);
 }
-.stats-bar::-webkit-scrollbar { display: none; }
-
-.stat-chip {
-background: var(–paper);
-border: 1px solid var(–aged);
-border-radius: 20px;
-padding: 4px 12px;
-font-size: 11px;
-white-space: nowrap;
-color: var(–ink);
-font-weight: 500;
-flex-shrink: 0;
+.frow:last-child { border-bottom: none; }
+.frow-lbl { font-size: 15px; width: 76px; flex-shrink: 0; }
+.frow input, .frow textarea {
+flex: 1; border: none; outline: none;
+font-size: 15px; font-family: inherit; color: var(–text);
+background: transparent; text-align: right; min-width: 0;
 }
-.stat-chip.filter-btn { cursor: pointer; transition: all 0.15s; }
-.stat-chip.filter-btn.active { background: var(–accent); border-color: var(–accent); color: white; }
+.frow input::placeholder, .frow textarea::placeholder { color: var(–sub); }
+.frow textarea { text-align: left; resize: none; min-height: 56px; line-height: 1.5; }
 
-/* MAIN LIST */
-main { padding: 12px 16px 100px; }
+/* SEARCH */
+.s-sec { margin: 12px 16px 0; }
+.s-cover-box { background: white; border-radius: 12px; overflow: hidden; margin-bottom: 8px; }
+.s-cover-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; }
+.s-cover-img { width: 40px; height: 56px; border-radius: 6px; object-fit: cover; }
+.s-cover-info { flex: 1; min-width: 0; }
+.s-cover-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-cover-sub { font-size: 12px; color: var(–sub); margin-top: 2px; }
+.s-clear { color: var(–accent); font-size: 13px; cursor: pointer; flex-shrink: 0; }
 
-.empty-state {
-text-align: center;
-padding: 60px 20px;
-color: var(–aged);
-}
-.empty-state .big-icon { font-size: 64px; margin-bottom: 16px; }
-.empty-state p { font-size: 14px; line-height: 1.8; }
-
-/* MANGA CARD */
-.manga-card {
-background: white;
-border-radius: 12px;
-margin-bottom: 12px;
-box-shadow: 0 2px 12px var(–shadow);
-overflow: hidden;
-border: 1px solid rgba(212,201,168,0.4);
-transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.manga-card-inner {
-display: flex;
-gap: 0;
-}
-
-.manga-cover {
-width: 72px;
-min-height: 104px;
-flex-shrink: 0;
-background: var(–cream);
-position: relative;
-overflow: hidden;
-}
-
-.manga-cover img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-}
-
-.manga-cover-placeholder {
-width: 100%;
-height: 100%;
-min-height: 104px;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-background: linear-gradient(145deg, var(–spine), #4a2c1a);
-color: var(–aged);
-font-size: 10px;
-text-align: center;
-padding: 8px 4px;
-font-family: ‘Noto Serif JP’, serif;
-}
-
-.manga-cover-placeholder .cover-icon { font-size: 24px; margin-bottom: 6px; }
-
-.manga-body {
-flex: 1;
-padding: 10px 12px;
-min-width: 0;
-}
-
-.manga-title {
-font-family: ‘Noto Serif JP’, serif;
-font-weight: 700;
-font-size: 15px;
-line-height: 1.3;
-margin-bottom: 4px;
-overflow: hidden;
-text-overflow: ellipsis;
-white-space: nowrap;
-}
-
-.manga-author {
-font-size: 11px;
-color: #888;
+.s-btn {
+width: 100%; background: white; border: none; border-radius: 12px;
+padding: 13px 16px; font-size: 15px; font-family: inherit;
+color: var(–blue); font-weight: 600; cursor: pointer;
+display: flex; align-items: center; justify-content: center; gap: 6px;
 margin-bottom: 8px;
 }
+.s-btn:active { opacity: 0.7; }
 
-/* VOLUME PROGRESS */
-.volume-section {}
-
-.volume-label {
-font-size: 11px;
-color: #666;
-margin-bottom: 5px;
-display: flex;
-justify-content: space-between;
-align-items: center;
+.s-results { background: white; border-radius: 12px; overflow: hidden; display: none; }
+.s-results.on { display: block; }
+.sri {
+display: flex; align-items: center; gap: 12px;
+padding: 10px 16px; border-bottom: 0.5px solid var(–sep); cursor: pointer;
 }
+.sri:last-child { border-bottom: none; }
+.sri:active { background: var(–bg); }
+.sri-img { width: 38px; height: 52px; border-radius: 5px; object-fit: cover; flex-shrink: 0; background: var(–sep); }
+.sri-ph { width: 38px; height: 52px; border-radius: 5px; background: linear-gradient(145deg,#3a3a3c,#1c1c1e); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.sri-t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sri-s { font-size: 12px; color: var(–sub); margin-top: 2px; }
+.s-empty { padding: 20px; text-align: center; color: var(–sub); font-size: 14px; line-height: 1.6; }
 
-.volume-count-badge {
-font-weight: 700;
-color: var(–owned);
-font-size: 13px;
+/* VOL EDITOR */
+.vsec { margin: 12px 16px 0; }
+.vsec-head { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 8px; }
+.vsec-title { font-size: 13px; color: var(–sub); font-weight: 500; }
+.vsec-acts { display: flex; gap: 8px; }
+.va-btn { background: white; border: none; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-family: inherit; color: var(–blue); font-weight: 600; cursor: pointer; }
+.va-btn.clr { color: var(–sub); }
+
+.v-legend { display: flex; gap: 12px; padding: 0 4px 8px; }
+.vli { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(–sub); }
+.vld { width: 10px; height: 10px; border-radius: 3px; }
+
+.vgrid { display: flex; flex-wrap: wrap; gap: 5px; }
+.ve {
+width: 44px; height: 44px; border-radius: 10px;
+border: 1.5px solid var(–sep); background: var(–bg);
+display: flex; flex-direction: column; align-items: center; justify-content: center;
+cursor: pointer; font-family: inherit; gap: 1px;
 }
+.ve:active { transform: scale(0.86); }
+.ve .vn { font-size: 13px; font-weight: 700; color: var(–sub); }
+.ve .vi { font-size: 9px; color: transparent; }
+.ve.o { background: var(–owned); border-color: var(–owned); }
+.ve.o .vn { color: white; }
+.ve.o .vi { color: rgba(255,255,255,0.8); }
+.ve.w { background: rgba(175,82,222,0.1); border-color: var(–wish); border-style: dashed; }
+.ve.w .vn { color: var(–wish); }
+.ve.w .vi { color: var(–wish); }
+.v-hint { font-size: 11px; color: var(–sub); text-align: center; padding: 8px 4px 0; }
 
-.volume-grid {
-display: flex;
-flex-wrap: wrap;
-gap: 3px;
-max-height: 62px;
-overflow: hidden;
-transition: max-height 0.3s ease;
-}
-
-.volume-grid.expanded { max-height: 400px; }
-
-.vol-btn {
-width: 24px;
-height: 24px;
-border-radius: 5px;
-border: 1.5px solid var(–aged);
-background: var(–missing);
-font-size: 9px;
-font-weight: 700;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-color: #888;
-transition: all 0.12s;
-font-family: ‘Noto Sans JP’, sans-serif;
-position: relative;
-}
-
-.vol-btn.owned {
-background: var(–owned);
-border-color: var(–owned);
-color: white;
-}
-
-.vol-btn.wish {
-background: transparent;
-border-color: var(–wish);
-border-style: dashed;
-color: var(–wish);
-}
-
-.vol-btn:active { transform: scale(0.85); }
-
-.vol-more {
-width: 24px;
-height: 24px;
-border-radius: 5px;
-border: 1.5px solid var(–aged);
-background: transparent;
-font-size: 9px;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-color: #999;
-font-family: ‘Noto Sans JP’, sans-serif;
-}
-
-/* CARD FOOTER */
-.manga-footer {
-display: flex;
-padding: 6px 12px 8px;
-gap: 6px;
-background: var(–cream);
-border-top: 1px solid rgba(212,201,168,0.5);
-align-items: center;
-}
-
-.manga-note {
-flex: 1;
-font-size: 11px;
-color: #888;
-overflow: hidden;
-text-overflow: ellipsis;
-white-space: nowrap;
-}
-
-.manga-location {
-font-size: 10px;
-color: var(–accent2);
-background: rgba(139,105,20,0.1);
-padding: 2px 8px;
-border-radius: 10px;
-}
-
-.btn-icon {
-background: none;
-border: none;
-cursor: pointer;
-font-size: 16px;
-padding: 2px 4px;
-opacity: 0.6;
-transition: opacity 0.15s, transform 0.15s;
-}
-.btn-icon:active { opacity: 1; transform: scale(0.9); }
-
-.btn-refresh {
-font-size: 13px;
-opacity: 0.5;
-}
-
-/* MODAL OVERLAY */
-.modal-overlay {
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,0.5);
-z-index: 200;
-display: none;
-align-items: flex-end;
-}
-
-.modal-overlay.open { display: flex; }
-
-.modal-sheet {
-background: #ffffff;
-width: 100%;
-border-radius: 20px 20px 0 0;
-max-height: 92vh;
-overflow-y: auto;
--webkit-overflow-scrolling: touch;
-animation: slideUp 0.25s ease-out;
-padding-bottom: env(safe-area-inset-bottom, 20px);
-box-shadow: 0 -4px 30px rgba(0,0,0,0.2);
-}
-
-@keyframes slideUp {
-from { transform: translateY(100%); }
-to { transform: translateY(0); }
-}
-
-.modal-handle {
-width: 40px;
-height: 4px;
-background: var(–aged);
-border-radius: 2px;
-margin: 12px auto 0;
-}
-
-.modal-header {
-padding: 16px 20px 12px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-border-bottom: 1px solid var(–aged);
-}
-
-.modal-title {
-font-family: ‘Noto Serif JP’, serif;
-font-weight: 700;
-font-size: 18px;
-}
-
-.btn-close {
-background: none;
-border: none;
-font-size: 24px;
-cursor: pointer;
-color: #888;
-padding: 0 4px;
-}
-
-.modal-body { padding: 16px 20px; }
-
-/* FORM STYLES */
-.form-group { margin-bottom: 16px; }
-
-label {
-display: block;
-font-size: 12px;
-font-weight: 700;
-color: #333;
-margin-bottom: 6px;
-letter-spacing: 0.05em;
-}
-
-input[type=“text”], input[type=“number”], textarea, select {
-width: 100%;
-padding: 10px 14px;
-border: 1.5px solid #ccc;
-border-radius: 10px;
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 15px;
-background: #ffffff;
-color: #1a1209;
-outline: none;
-transition: border-color 0.2s;
--webkit-appearance: none;
-}
-
-input:focus, textarea:focus, select:focus {
-border-color: var(–accent);
-box-shadow: 0 0 0 3px rgba(192,57,43,0.12);
-}
-
-textarea { resize: vertical; min-height: 70px; line-height: 1.6; }
-
-.input-row { display: flex; gap: 10px; }
-.input-row .form-group { flex: 1; }
-
-/* SEARCH RESULT */
-.search-result-area {
-background: var(–cream);
-border-radius: 10px;
-padding: 10px;
-margin-bottom: 12px;
-min-height: 44px;
-display: flex;
-align-items: center;
-gap: 10px;
-font-size: 13px;
-color: #888;
-}
-
-.search-result-cover {
-width: 40px;
-height: 56px;
-object-fit: cover;
-border-radius: 4px;
-flex-shrink: 0;
-background: var(–aged);
-}
-
-.search-result-info { flex: 1; min-width: 0; }
-.search-result-info .title { font-weight: 700; font-size: 14px; color: var(–ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.search-result-info .meta { font-size: 11px; color: #888; margin-top: 2px; }
-
-.btn-api-search {
-background: var(–spine);
-color: var(–paper);
-border: none;
-border-radius: 8px;
-padding: 10px 16px;
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 13px;
-cursor: pointer;
-margin-bottom: 12px;
-width: 100%;
-transition: background 0.15s;
-}
-.btn-api-search:active { background: var(–accent); }
-
-/* VOLUME EDITOR in modal */
-.volume-editor {
-background: var(–cream);
-border-radius: 10px;
-padding: 12px;
-}
-
-.vol-editor-header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-margin-bottom: 10px;
-}
-
-.vol-editor-header label { margin: 0; font-size: 12px; }
-
-.vol-editor-actions {
-display: flex;
-gap: 6px;
-}
-
-.btn-vol-action {
-font-size: 11px;
-padding: 4px 10px;
-border-radius: 6px;
-border: 1.5px solid;
-cursor: pointer;
-font-family: ‘Noto Sans JP’, sans-serif;
-font-weight: 700;
-}
-
-.btn-all-owned { background: var(–owned); border-color: var(–owned); color: white; }
-.btn-all-clear { background: white; border-color: var(–aged); color: #888; }
-
-.vol-editor-grid {
-display: flex;
-flex-wrap: wrap;
-gap: 4px;
-}
-
-.vol-editor-btn {
-width: 38px;
-height: 38px;
-border-radius: 8px;
-border: 2px solid var(–aged);
-background: var(–missing);
-font-size: 12px;
-font-weight: 700;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-color: #888;
-transition: all 0.12s;
-font-family: ‘Noto Sans JP’, sans-serif;
-flex-direction: column;
-gap: 1px;
-}
-
-.vol-editor-btn.owned {
-background: var(–owned);
-border-color: var(–owned);
-color: white;
-}
-
-.vol-editor-btn.wish {
-background: rgba(123,74,158,0.1);
-border-color: var(–wish);
-border-style: dashed;
-color: var(–wish);
-}
-
-.vol-editor-btn .vol-state-icon {
-font-size: 8px;
-line-height: 1;
-}
-
-/* LEGEND */
-.legend {
-display: flex;
-gap: 12px;
-margin-bottom: 10px;
-font-size: 11px;
-color: #666;
-}
-
-.legend-item { display: flex; align-items: center; gap: 4px; }
-.legend-dot { width: 12px; height: 12px; border-radius: 3px; }
-
-/* SAVE BTN */
-.btn-save {
-width: 100%;
-padding: 14px;
-background: var(–accent);
-color: white;
-border: none;
-border-radius: 12px;
-font-family: ‘Noto Serif JP’, serif;
-font-weight: 700;
-font-size: 16px;
-cursor: pointer;
-margin-top: 4px;
-box-shadow: 0 4px 16px rgba(192,57,43,0.3);
-transition: transform 0.15s, box-shadow 0.15s;
-}
-.btn-save:active { transform: scale(0.97); box-shadow: none; }
-
-/* DELETE BTN */
-.btn-delete {
-width: 100%;
-padding: 12px;
-background: transparent;
-color: #c0392b;
-border: 1.5px solid #c0392b;
-border-radius: 12px;
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 14px;
-cursor: pointer;
-margin-top: 8px;
-transition: all 0.15s;
-}
-.btn-delete:active { background: #c0392b; color: white; }
-
-/* VOL CYCLE tooltip */
-.vol-cycle-hint {
-font-size: 10px;
-color: #999;
-margin-top: 6px;
-text-align: center;
-}
+/* DELETE */
+.del-sec { margin: 12px 16px 0; }
+.del-btn { width: 100%; background: white; border: none; border-radius: 12px; padding: 13px; font-size: 15px; font-family: inherit; color: var(–accent); cursor: pointer; }
+.del-btn:active { opacity: 0.7; }
 
 /* TOAST */
 .toast {
-position: fixed;
-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-left: 50%;
-transform: translateX(-50%) translateY(80px);
-background: var(–spine);
-color: var(–paper);
-padding: 10px 20px;
-border-radius: 20px;
-font-size: 13px;
-z-index: 500;
-transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-white-space: nowrap;
-box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+position: fixed; bottom: calc(24px + env(safe-area-inset-bottom,0px));
+left: 50%; transform: translateX(-50%) translateY(60px);
+background: rgba(28,28,30,0.92); color: white;
+padding: 9px 18px; border-radius: 20px; font-size: 14px; font-weight: 500;
+z-index: 500; white-space: nowrap;
+transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
+.toast.on { transform: translateX(-50%) translateY(0); }
 
-.toast.show { transform: translateX(-50%) translateY(0); }
-
-/* LOADING SPINNER */
-.spinner {
-width: 20px;
-height: 20px;
-border: 2px solid rgba(255,255,255,0.3);
-border-top-color: white;
-border-radius: 50%;
-animation: spin 0.8s linear infinite;
-flex-shrink: 0;
+/* LOADING */
+#lo {
+position: fixed; inset: 0; background: #f2f2f7; z-index: 400;
+display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* SHARE INFO BAR */
-.share-bar {
-background: linear-gradient(135deg, var(–accent2), #6b5010);
-color: var(–paper);
-padding: 10px 16px;
-font-size: 12px;
-display: flex;
-align-items: center;
-gap: 8px;
-cursor: pointer;
-}
-.share-bar:active { opacity: 0.8; }
-.share-bar .share-icon { font-size: 16px; }
-
-/* Long press hint */
-.longpress-hint {
-font-size: 10px;
-color: #bbb;
-text-align: center;
-padding: 4px 0 2px;
-}
+.spin { width: 28px; height: 28px; border: 3px solid var(–sep); border-top-color: var(–blue); border-radius: 50%; animation: sp 0.7s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
 </style>
 
 </head>
 <body>
 
-<header>
-  <div class="header-top">
-    <div class="header-title">
-      <span>MANGA SHELF</span>
-      本棚
-    </div>
-    <button class="btn-add" onclick="openAddModal()" aria-label="追加">＋</button>
+<div class="header">
+  <div class="header-row">
+    <div class="app-title">本棚</div>
+    <button class="btn-add" onclick="openAdd()">＋</button>
   </div>
-  <div class="controls">
-    <div class="search-wrap">
-      <input type="search" id="searchInput" placeholder="タイトル・作者で検索" oninput="renderList()">
-    </div>
-    <button class="sort-btn" onclick="cycleSort()">並替: <span id="sortLabel">題名</span></button>
+  <div class="search-wrap">
+    <span class="search-ico">🔍</span>
+    <input type="search" id="searchInput" placeholder="検索" oninput="renderList()">
   </div>
-</header>
+</div>
 
-<div class="stats-bar" id="statsBar"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" onclick="setFilter('all',this)">すべて</button>
+  <button class="tab" onclick="setFilter('incomplete',this)">未完集</button>
+  <button class="tab" onclick="setFilter('wishlist',this)">欲しい</button>
+</div>
 
-<main id="mainList"></main>
+<div class="stats" id="stats"></div>
 
-<!-- ADD/EDIT MODAL -->
+<div class="sort-row">
+  <button class="sort-btn" onclick="cycleSort()">並び替え: <span id="sortLbl">タイトル</span> ↕</button>
+</div>
 
-<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
-  <div class="modal-sheet" id="modalSheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle">マンガを追加</div>
-      <button class="btn-close" onclick="closeModal()">✕</button>
+<main id="list"></main>
+
+<!-- MODAL -->
+
+<div class="overlay" id="overlay" onclick="handleOverlay(event)">
+  <div class="sheet" id="sheet">
+    <div class="mnav">
+      <button class="mnav-btn" onclick="closeModal()">キャンセル</button>
+      <div class="mnav-title" id="mtitle">追加</div>
+      <button class="mnav-btn save" onclick="saveManga()">保存</button>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>タイトル</label>
-        <input type="text" id="inputTitle" placeholder="タイトルを入力">
-      </div>
-      <button class="btn-api-search" onclick="searchOpenBD()">
-        <span id="apiSearchLabel">📚 書誌情報を検索（Google Books）</span>
-      </button>
-      <div class="search-result-area" id="searchResultArea">
-        <span style="color:#888;font-size:13px">タイトルを入力して「検索」を押すと表紙・著者情報が入ります</span>
-      </div>
 
 ```
-  <div class="form-group">
-    <label>著者</label>
-    <input type="text" id="inputAuthor" placeholder="著者名">
+<!-- 検索 -->
+<div class="s-sec">
+  <div class="s-cover-box" id="coverBox" style="display:none">
+    <div class="s-cover-row" id="coverRow"></div>
   </div>
-
-  <div class="input-row">
-    <div class="form-group">
-      <label>最新刊（巻）</label>
-      <input type="number" id="inputLatest" placeholder="例: 12" min="1" max="200">
-    </div>
-    <div class="form-group">
-      <label>保存場所</label>
-      <input type="text" id="inputLocation" placeholder="例: 本棚A段">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label>メモ（欲しい巻・購入予定など）</label>
-    <textarea id="inputNote" placeholder="例: 次は13巻が出たら買う、電子書籍で読んでる など"></textarea>
-  </div>
-
-  <div class="form-group">
-    <div class="volume-editor" id="volumeEditorWrap">
-      <div class="vol-editor-header">
-        <label>所持巻の設定</label>
-        <div class="vol-editor-actions">
-          <button class="btn-vol-action btn-all-owned" onclick="setAllOwned()">全部所持</button>
-          <button class="btn-vol-action btn-all-clear" onclick="clearAllOwned()">全解除</button>
-        </div>
-      </div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--owned)"></div>所持</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--missing);border:1.5px solid var(--aged)"></div>未所持</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(123,74,158,0.1);border:1.5px dashed var(--wish)"></div>欲しい</div>
-      </div>
-      <div class="vol-editor-grid" id="volEditorGrid"></div>
-      <div class="vol-cycle-hint">タップで「所持 → 欲しい → 未所持」と切り替え</div>
-    </div>
-  </div>
-
-  <input type="hidden" id="inputCoverUrl">
-  <input type="hidden" id="editingId">
-
-  <button class="btn-save" onclick="saveManga()">保存する</button>
-  <button class="btn-delete" id="btnDelete" onclick="deleteManga()" style="display:none">この作品を削除する</button>
+  <button class="s-btn" onclick="searchBooks()"><span id="sBtn">🔍 書誌情報を検索</span></button>
+  <div class="s-results" id="sResults"></div>
 </div>
+
+<!-- 基本情報 -->
+<div class="fsec">
+  <div class="frow"><div class="frow-lbl">タイトル</div><input type="text" id="iTitle" placeholder="必須"></div>
+  <div class="frow"><div class="frow-lbl">著者</div><input type="text" id="iAuthor" placeholder="任意"></div>
+  <div class="frow"><div class="frow-lbl">最新刊</div><input type="number" id="iLatest" placeholder="巻数" min="1" max="999" style="text-align:right"></div>
+  <div class="frow"><div class="frow-lbl">保存場所</div><input type="text" id="iLoc" placeholder="例: 本棚A段"></div>
+  <div class="frow" style="align-items:flex-start;padding-top:12px">
+    <div class="frow-lbl" style="padding-top:3px">メモ</div>
+    <textarea id="iNote" placeholder="欲しい巻・購入予定など"></textarea>
+  </div>
+</div>
+
+<!-- 所持巻 -->
+<div class="vsec">
+  <div class="vsec-head">
+    <div class="vsec-title">所持巻の設定</div>
+    <div class="vsec-acts">
+      <button class="va-btn" onclick="setAllOwned()">全部所持</button>
+      <button class="va-btn clr" onclick="clearAllVol()">全解除</button>
+    </div>
+  </div>
+  <div class="v-legend">
+    <div class="vli"><div class="vld" style="background:var(--owned)"></div>所持</div>
+    <div class="vli"><div class="vld" style="background:var(--bg);border:1.5px solid var(--sep)"></div>未所持</div>
+    <div class="vli"><div class="vld" style="background:rgba(175,82,222,0.15);border:1.5px dashed var(--wish)"></div>欲しい</div>
+  </div>
+  <div class="vgrid" id="vGrid"></div>
+  <div class="v-hint" id="vHint">「最新刊」に巻数を入力すると巻ごとに設定できます</div>
+</div>
+
+<div class="del-sec" id="delSec" style="display:none">
+  <button class="del-btn" onclick="deleteManga()">この作品を削除</button>
+</div>
+
+<input type="hidden" id="iCover">
+<input type="hidden" id="iId">
+<div style="height:8px"></div>
 ```
 
   </div>
@@ -801,25 +342,16 @@ padding: 4px 0 2px;
 
 <div class="toast" id="toast"></div>
 
-<!-- Loading overlay -->
-
-<div id="loadingOverlay" style="position:fixed;inset:0;background:rgba(250,246,238,0.95);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
-  <div style="font-size:40px">📚</div>
-  <div style="font-family:'Noto Serif JP',serif;font-size:18px;font-weight:700;color:#2c1810">本棚</div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <div style="width:8px;height:8px;border-radius:50%;background:#c0392b;animation:pulse 1s ease-in-out infinite"></div>
-    <div style="font-size:13px;color:#888">Firebaseに接続中...</div>
-  </div>
-  <style>@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}</style>
+<div id="lo">
+  <div style="font-size:36px">📚</div>
+  <div style="font-weight:700;font-size:20px">本棚</div>
+  <div class="spin"></div>
 </div>
-
-<!-- Firebase SDK -->
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ===================== FIREBASE CONFIG =====================
 const firebaseConfig = {
   apiKey: "AIzaSyAC-91dSm0tN07yebTc-HFTh1_x5XG5kbA",
   authDomain: "manga-shelf2.firebaseapp.com",
@@ -833,486 +365,292 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const mangasRef = ref(db, 'mangas');
+const mRef = ref(db, 'mangas');
 
-// ===================== DATA LAYER =====================
-let mangas = [];
-let dbReady = false;
+let mangas = [], sortMode = 0, filterMode = 'all', evs = {};
+const SORTS = ['タイトル','著者','進捗','更新'];
 
-function saveData(data) {
-  // Save entire mangas array to Firebase
-  const obj = {};
-  data.forEach(m => { obj[m.id] = m; });
-  set(mangasRef, obj).catch(e => showToast('保存エラー: ' + e.message));
+// Firebase sync
+function save(data) {
+  const o = {}; data.forEach(m => o[m.id] = m);
+  set(mRef, o).catch(() => toast('保存エラー'));
 }
-
-// リアルタイム同期
-onValue(mangasRef, (snapshot) => {
-  const val = snapshot.val();
-  mangas = val ? Object.values(val) : [];
-  dbReady = true;
-  document.getElementById('loadingOverlay').style.display = 'none';
-  renderStats();
-  renderList();
-}, (error) => {
-  document.getElementById('loadingOverlay').innerHTML = `
-    <div style="text-align:center;color:#c0392b;padding:20px">
-      <div style="font-size:32px;margin-bottom:12px">⚠️</div>
-      <div style="font-weight:700;margin-bottom:8px">接続エラー</div>
-      <div style="font-size:13px;color:#666">Firebaseに接続できませんでした。<br>firebaseConfigを確認してください。</div>
-    </div>`;
+onValue(mRef, s => {
+  mangas = s.val() ? Object.values(s.val()) : [];
+  document.getElementById('lo').style.display = 'none';
+  renderStats(); renderList();
+}, () => {
+  document.getElementById('lo').innerHTML = '<div style="color:#ff3b30;font-size:14px;text-align:center">接続エラー<br>ページを再読み込みしてください</div>';
 });
 
-// ===================== STATE =====================
-let sortMode = 0; // 0=title, 1=author, 2=progress, 3=updated
-const sortModes = ['題名', '著者', '進捗', '更新'];
-let filterMode = 'all'; // all, incomplete, wishlist
-let editVolState = {}; // {1: 'owned'|'wish'|'none', ...}
-let editLatestVol = 1;
-
-// ===================== STATS BAR =====================
+// Stats
 function renderStats() {
-  const bar = document.getElementById('statsBar');
-  const total = mangas.length;
-  const totalVols = mangas.reduce((s, m) => s + Object.values(m.volumes || {}).filter(v => v === 'owned').length, 0);
-  const withWish = mangas.filter(m => Object.values(m.volumes || {}).some(v => v === 'wish')).length;
-  const incomplete = mangas.filter(m => {
-    if (!m.latest) return false;
-    const owned = Object.values(m.volumes || {}).filter(v => v === 'owned').length;
-    return owned < m.latest;
-  }).length;
-
-  bar.innerHTML = `
-    <div class="stat-chip">${total}作品</div>
-    <div class="stat-chip">${totalVols}冊所持</div>
-    <div class="stat-chip filter-btn ${filterMode === 'incomplete' ? 'active' : ''}" onclick="setFilter('incomplete')">未完集 ${incomplete}</div>
-    <div class="stat-chip filter-btn ${filterMode === 'wishlist' ? 'active' : ''}" onclick="setFilter('wishlist')">欲しい ${withWish}</div>
-    <div class="stat-chip filter-btn ${filterMode === 'all' ? 'active' : ''}" onclick="setFilter('all')">全て</div>
-  `;
+  const vols = mangas.reduce((s,m)=>s+Object.values(m.volumes||{}).filter(v=>v==='owned').length, 0);
+  const wc = mangas.filter(m=>Object.values(m.volumes||{}).some(v=>v==='wish')).length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-n">${mangas.length}</div><div class="stat-l">作品</div></div>
+    <div class="stat"><div class="stat-n">${vols}</div><div class="stat-l">冊所持</div></div>
+    <div class="stat"><div class="stat-n">${wc}</div><div class="stat-l">欲しい</div></div>`;
 }
 
-window.setFilter = function(mode) {
+// Filter / Sort
+window.setFilter = (mode, btn) => {
   filterMode = mode;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
   renderList();
-  renderStats();
-}
-
-// ===================== SORT =====================
-window.cycleSort = function() {
-  sortMode = (sortMode + 1) % sortModes.length;
-  document.getElementById('sortLabel').textContent = sortModes[sortMode];
+};
+window.cycleSort = () => {
+  sortMode = (sortMode + 1) % SORTS.length;
+  document.getElementById('sortLbl').textContent = SORTS[sortMode];
   renderList();
-}
+};
+const pct = m => m.latest ? Object.values(m.volumes||{}).filter(v=>v==='owned').length / m.latest : 0;
 
-function getSorted(list) {
-  return [...list].sort((a, b) => {
-    if (sortMode === 0) return (a.title || '').localeCompare(b.title || '', 'ja');
-    if (sortMode === 1) return (a.author || '').localeCompare(b.author || '', 'ja');
-    if (sortMode === 2) {
-      const pa = getProgress(a), pb = getProgress(b);
-      return pb - pa;
-    }
-    if (sortMode === 3) return (b.updatedAt || 0) - (a.updatedAt || 0);
-    return 0;
-  });
-}
-
-function getProgress(m) {
-  if (!m.latest || m.latest === 0) return 0;
-  const owned = Object.values(m.volumes || {}).filter(v => v === 'owned').length;
-  return owned / m.latest;
-}
-
-// ===================== MAIN LIST =====================
 function renderList() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   let list = mangas;
-
-  if (q) {
-    list = list.filter(m =>
-      (m.title || '').toLowerCase().includes(q) ||
-      (m.author || '').toLowerCase().includes(q)
-    );
-  }
-
-  if (filterMode === 'incomplete') {
-    list = list.filter(m => {
-      if (!m.latest) return false;
-      const owned = Object.values(m.volumes || {}).filter(v => v === 'owned').length;
-      return owned < m.latest;
-    });
-  } else if (filterMode === 'wishlist') {
-    list = list.filter(m => Object.values(m.volumes || {}).some(v => v === 'wish'));
-  }
-
-  list = getSorted(list);
-
-  const container = document.getElementById('mainList');
-  if (list.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="big-icon">📚</div>
-        <p>${mangas.length === 0 ? '「＋」ボタンでマンガを追加しましょう' : '検索条件に一致する作品がありません'}</p>
-      </div>`;
+  if (q) list = list.filter(m => (m.title||'').toLowerCase().includes(q) || (m.author||'').toLowerCase().includes(q));
+  if (filterMode === 'incomplete') list = list.filter(m => m.latest && Object.values(m.volumes||{}).filter(v=>v==='owned').length < m.latest);
+  if (filterMode === 'wishlist') list = list.filter(m => Object.values(m.volumes||{}).some(v=>v==='wish'));
+  list = [...list].sort((a,b) => {
+    if (sortMode===0) return (a.title||'').localeCompare(b.title||'','ja');
+    if (sortMode===1) return (a.author||'').localeCompare(b.author||'','ja');
+    if (sortMode===2) return pct(b)-pct(a);
+    return (b.updatedAt||0)-(a.updatedAt||0);
+  });
+  const el = document.getElementById('list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><div class="ico">📚</div><p>${mangas.length===0?'「＋」ボタンでマンガを追加しましょう':'条件に一致する作品がありません'}</p></div>`;
     return;
   }
-
-  container.innerHTML = list.map(m => renderCard(m)).join('');
+  el.innerHTML = list.map(card).join('');
 }
 
-function renderCard(m) {
-  const vols = m.volumes || {};
-  const latest = m.latest || 0;
-  const ownedCount = Object.values(vols).filter(v => v === 'owned').length;
-  const wishCount = Object.values(vols).filter(v => v === 'wish').length;
-
-  let volDots = '';
-  const maxShow = 18;
-  const totalVols = Math.max(latest, ...Object.keys(vols).map(Number).filter(Boolean), 1);
-
-  for (let i = 1; i <= Math.min(totalVols, maxShow); i++) {
-    const state = vols[i] || 'none';
-    const cls = state === 'owned' ? 'owned' : state === 'wish' ? 'wish' : '';
-    volDots += `<button class="vol-btn ${cls}" onclick="quickToggleVol('${m.id}', ${i})" title="${i}巻">${i}</button>`;
+function card(m) {
+  const vols = m.volumes||{}, lat = m.latest||0;
+  const owned = Object.values(vols).filter(v=>v==='owned').length;
+  const wc = Object.values(vols).filter(v=>v==='wish').length;
+  const p = lat ? Math.min(100, Math.round(owned/lat*100)) : 0;
+  const total = Math.max(lat, ...Object.keys(vols).map(Number).filter(Boolean), 0);
+  const maxShow = 16;
+  let vbs = '';
+  for (let i=1; i<=Math.min(total,maxShow); i++) {
+    const s = vols[i]||'none';
+    vbs += `<button class="vb ${s==='owned'?'o':s==='wish'?'w':''}" onclick="qToggle('${m.id}',${i})">${i}</button>`;
   }
-
-  if (totalVols > maxShow) {
-    volDots += `<button class="vol-more" onclick="openEditModal('${m.id}')">+${totalVols - maxShow}</button>`;
-  }
-
-  const coverHtml = m.coverUrl
-    ? `<img src="${m.coverUrl}" alt="${m.title}" onerror="this.parentNode.innerHTML='<div class=manga-cover-placeholder><div class=cover-icon>📖</div></div>'">`
-    : `<div class="manga-cover-placeholder"><div class="cover-icon">📖</div></div>`;
-
-  const progressText = latest
-    ? `<span class="volume-count-badge">${ownedCount}/${latest}巻</span>`
-    : `<span class="volume-count-badge">${ownedCount}巻</span>`;
-
-  const wishBadge = wishCount > 0 ? ` <span style="color:var(--wish);font-weight:700">+欲しい${wishCount}</span>` : '';
-
-  return `
-    <div class="manga-card" id="card-${m.id}">
-      <div class="manga-card-inner">
-        <div class="manga-cover">${coverHtml}</div>
-        <div class="manga-body">
-          <div class="manga-title">${escHtml(m.title || '（タイトル未設定）')}</div>
-          <div class="manga-author">${escHtml(m.author || '')}</div>
-          <div class="volume-section">
-            <div class="volume-label">
-              <span>所持巻${wishBadge}</span>
-              ${progressText}
-            </div>
-            <div class="volume-grid" id="volgrid-${m.id}">${volDots}</div>
-          </div>
-        </div>
-      </div>
-      <div class="manga-footer">
-        <div class="manga-note">${m.note ? '📝 ' + escHtml(m.note) : ''}</div>
-        ${m.location ? `<div class="manga-location">📍 ${escHtml(m.location)}</div>` : ''}
-        <button class="btn-icon btn-refresh" onclick="refreshLatest('${m.id}')" title="最新刊を再取得">🔄</button>
-        <button class="btn-icon" onclick="openEditModal('${m.id}')" title="編集">✏️</button>
+  if (total > maxShow) vbs += `<button class="vb-more" onclick="openEdit('${m.id}')">+${total-maxShow}</button>`;
+  const cov = m.coverUrl ? `<div class="cover"><img src="${e(m.coverUrl)}" onerror="this.parentNode.innerHTML='📖'"></div>` : '<div class="cover">📖</div>';
+  const tags = [
+    m.location ? `<span class="m-tag loc">📍 ${e(m.location)}</span>` : '',
+    m.note ? `<span class="m-tag">📝 ${e(m.note.slice(0,24))}${m.note.length>24?'…':''}</span>` : '',
+    wc ? `<span class="m-tag wsh">♡ 欲しい ${wc}冊</span>` : '',
+  ].filter(Boolean).join('');
+  return `<div class="card">
+    <div class="card-body">
+      ${cov}
+      <div class="card-info">
+        <div class="card-title">${e(m.title||'（無題）')}</div>
+        <div class="card-author">${e(m.author||'')}</div>
+        <div class="prog-row"><span class="prog-owned">${owned}冊所持</span><span class="prog-total">${lat?`全${lat}巻`:'巻数未設定'}</span></div>
+        ${lat?`<div class="prog-bar"><div class="prog-fill" style="width:${p}%"></div></div>`:''}
+        <div class="vols">${vbs}</div>
       </div>
     </div>
-  `;
+    ${tags?`<div class="card-meta">${tags}</div>`:''}
+    <div class="card-btns">
+      <button class="c-btn" onclick="refreshLatest('${m.id}')">🔄 最新刊確認</button>
+      <button class="c-btn" onclick="openEdit('${m.id}')">✏️ 編集</button>
+    </div>
+  </div>`;
 }
 
-// ===================== QUICK TOGGLE =====================
-window.quickToggleVol = function(id, vol) {
-  const m = mangas.find(x => x.id === id);
-  if (!m) return;
+// Quick toggle
+window.qToggle = (id, vol) => {
+  const m = mangas.find(x=>x.id===id); if (!m) return;
   if (!m.volumes) m.volumes = {};
-  const cur = m.volumes[vol] || 'none';
-  m.volumes[vol] = cur === 'none' ? 'owned' : cur === 'owned' ? 'wish' : 'none';
+  const cur = m.volumes[vol]||'none';
+  m.volumes[vol] = cur==='none'?'owned':cur==='owned'?'wish':'none';
   m.updatedAt = Date.now();
-  update(ref(db, 'mangas/' + id), { volumes: m.volumes, updatedAt: m.updatedAt });
-  renderList();
-  renderStats();
-}
+  update(ref(db,'mangas/'+id), {volumes:m.volumes, updatedAt:m.updatedAt});
+  renderList(); renderStats();
+};
 
-// ===================== OPEN BD API =====================
-window.searchOpenBD = async function() {
-  const title = document.getElementById('inputTitle').value.trim();
-  if (!title) { showToast('タイトルを入力してください'); return; }
-
-  const label = document.getElementById('apiSearchLabel');
-  const area = document.getElementById('searchResultArea');
-  label.innerHTML = '<div class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:6px"></div>検索中...';
-  area.innerHTML = '<span style="color:#888;font-size:13px">検索中...</span>';
-
+// NDL search
+window.searchBooks = async () => {
+  const title = document.getElementById('iTitle').value.trim();
+  if (!title) { toast('タイトルを入力してください'); return; }
+  const sb = document.getElementById('sBtn'), sr = document.getElementById('sResults');
+  sb.textContent = '検索中...';
+  sr.className = 's-results'; sr.innerHTML = '';
   try {
-    // Google Books API - works on all platforms including iOS Safari
-    const resp = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(title)}&langRestrict=ja&maxResults=8&printType=books`);
-    if (!resp.ok) throw new Error('network');
-    const data = await resp.json();
-    const items = (data.items || []).slice(0, 6);
-
-    if (items.length === 0) {
-      area.innerHTML = '<span style="color:#888;font-size:13px">見つかりませんでした。手動で入力してください。</span>';
-      label.innerHTML = '📚 書誌情報を検索';
-      return;
-    }
-
-    area.innerHTML = '<div style="width:100%">' + items.map((item, i) => {
-      const info = item.volumeInfo || {};
-      const btitle = info.title || '不明';
-      const bauthor = (info.authors || []).join(', ');
-      const cover = info.imageLinks?.thumbnail?.replace('http://', 'https://') || '';
-      const publisher = info.publisher || '';
-      return `
-        <div onclick="selectBook(${i})" style="cursor:pointer;padding:10px;border-radius:10px;margin-bottom:6px;background:#f8f8f8;border:1.5px solid #e0e0e0;width:100%;display:flex;gap:10px;align-items:center;-webkit-tap-highlight-color:transparent" id="searchRes-${i}" data-cover="${escAttr(cover)}" data-title="${escAttr(btitle)}" data-author="${escAttr(bauthor)}">
-          ${cover ? `<img src="${cover}" style="width:36px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0">` : '<div style="width:36px;height:50px;background:#ddd;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px">📖</div>'}
-          <div style="min-width:0;flex:1">
-            <div style="font-weight:700;font-size:13px;color:#1a1209;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(btitle)}</div>
-            <div style="font-size:11px;color:#888;margin-top:2px">${escHtml(bauthor)}${publisher ? ' · ' + escHtml(publisher) : ''}</div>
-          </div>
-          <div style="color:#c0392b;font-size:18px;flex-shrink:0">›</div>
-        </div>
-      `;
-    }).join('') + '</div>';
-
-  } catch (e) {
-    area.innerHTML = '<span style="color:#c0392b;font-size:13px">⚠️ 取得に失敗しました。手動で入力してください。</span>';
-  }
-
-  label.innerHTML = '📚 書誌情報を検索';
-}
-
-window.selectBook = function(i) {
-  const el = document.getElementById(`searchRes-${i}`);
-  if (!el) return;
-  const cover = el.dataset.cover;
-  const title = el.dataset.title;
-  const author = el.dataset.author;
-
-  document.getElementById('inputTitle').value = title;
-  document.getElementById('inputAuthor').value = author;
-  document.getElementById('inputCoverUrl').value = cover;
-
-  const area = document.getElementById('searchResultArea');
-  area.innerHTML = `
-    <img src="${cover}" class="search-result-cover" onerror="this.style.display='none'">
-    <div class="search-result-info">
-      <div class="title">${escHtml(title)}</div>
-      <div class="meta">${escHtml(author)}</div>
-    </div>
-    <span style="color:var(--owned);font-weight:700;font-size:12px">✓ 選択済</span>
-  `;
-
-  updateVolEditor();
-  showToast('書誌情報を入力しました');
-}
-
-// ===================== REFRESH LATEST =====================
-window.refreshLatest = async function(id) {
-  const m = mangas.find(x => x.id === id);
-  if (!m || !m.title) { showToast('タイトルが設定されていません'); return; }
-
-  showToast('🔄 最新刊を確認中...');
-
-  try {
-    const resp = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(m.title)}&langRestrict=ja&maxResults=20&printType=books`);
-    const data = await resp.json();
-    const items = data.items || [];
-
-    let maxVol = 0;
-    items.forEach(item => {
-      const t = (item.volumeInfo?.title || '');
-      const match = t.match(/[（(]?(\d+)[)）]?巻|第(\d+)巻|[\s　](\d+)$/);
-      if (match) {
-        const n = parseInt(match[1] || match[2] || match[3]);
-        if (n > maxVol) maxVol = n;
-      }
-    });
-
-    if (maxVol > 0 && maxVol !== m.latest) {
-      m.latest = maxVol;
-      m.updatedAt = Date.now();
-      update(ref(db, 'mangas/' + id), { latest: maxVol, updatedAt: m.updatedAt });
-      renderList();
-      renderStats();
-      showToast(`最新刊を ${maxVol}巻 に更新しました`);
-    } else if (maxVol > 0) {
-      showToast(`最新刊は ${m.latest || maxVol}巻 のままです`);
+    const r = await fetch(`https://ndlsearch.ndl.go.jp/api/opensearch?q=${encodeURIComponent(title)}&cnt=8&mediatype=Book`);
+    const xml = new DOMParser().parseFromString(await r.text(), 'application/xml');
+    const items = [...xml.querySelectorAll('item')];
+    if (!items.length) {
+      sr.innerHTML = '<div class="s-empty">見つかりませんでした<br>手動で入力してください</div>';
     } else {
-      showToast('巻数情報が見つかりませんでした');
+      sr.innerHTML = items.map((it,i) => {
+        const t = it.querySelector('title')?.textContent||'';
+        const au = it.querySelector('*|creator')?.textContent||'';
+        const isbn = it.querySelector('*|identifier')?.textContent||'';
+        const img = isbn ? `https://ndlsearch.ndl.go.jp/thumbnail/${isbn.replace(/-/g,'')}` : '';
+        return `<div class="sri" onclick="pickBook(${i})" id="b${i}" data-t="${ea(t)}" data-a="${ea(au)}" data-c="${ea(img)}">
+          ${img?`<img class="sri-img" src="${e(img)}" onerror="this.outerHTML='<div class=sri-ph>📖</div>'">`:'<div class="sri-ph">📖</div>'}
+          <div style="flex:1;min-width:0"><div class="sri-t">${e(t)}</div><div class="sri-s">${e(au)}</div></div>
+          <div style="color:var(--sub);font-size:16px">›</div>
+        </div>`;
+      }).join('');
     }
+    sr.classList.add('on');
   } catch {
-    showToast('取得に失敗しました');
+    sr.innerHTML = '<div class="s-empty">⚠️ 取得できませんでした<br>手動で入力してください</div>';
+    sr.classList.add('on');
   }
-}
+  sb.textContent = '🔍 書誌情報を検索';
+};
 
-// ===================== VOLUME EDITOR =====================
-function updateVolEditor() {
-  const latest = parseInt(document.getElementById('inputLatest').value) || 0;
-  editLatestVol = latest;
+window.pickBook = i => {
+  const el = document.getElementById('b'+i); if (!el) return;
+  const t = el.dataset.t, a = el.dataset.a, c = el.dataset.c;
+  document.getElementById('iTitle').value = t;
+  document.getElementById('iAuthor').value = a;
+  document.getElementById('iCover').value = c;
+  const cb = document.getElementById('coverBox'), cr = document.getElementById('coverRow');
+  cr.innerHTML = `${c?`<img class="s-cover-img" src="${e(c)}" onerror="this.style.display='none'">`:''}
+    <div class="s-cover-info"><div class="s-cover-title">${e(t)}</div><div class="s-cover-sub">${e(a)}</div></div>
+    <div class="s-clear" onclick="clearCover()">✕</div>`;
+  cb.style.display = 'block';
+  document.getElementById('sResults').classList.remove('on');
+  updateVE(); toast('選択しました ✓');
+};
 
-  const grid = document.getElementById('volEditorGrid');
-  if (latest < 1) {
-    grid.innerHTML = '<span style="font-size:12px;color:#999">「最新刊」に巻数を入力すると、巻ごとに設定できます</span>';
-    return;
-  }
+window.clearCover = () => {
+  document.getElementById('coverBox').style.display = 'none';
+  document.getElementById('iCover').value = '';
+};
 
-  grid.innerHTML = '';
-  for (let i = 1; i <= latest; i++) {
-    const state = editVolState[i] || 'none';
-    const icon = state === 'owned' ? '✓' : state === 'wish' ? '♡' : '';
-    const cls = state === 'owned' ? 'owned' : state === 'wish' ? 'wish' : '';
-    const btn = document.createElement('button');
-    btn.className = `vol-editor-btn ${cls}`;
-    btn.innerHTML = `<span>${i}</span><span class="vol-state-icon">${icon}</span>`;
-    btn.onclick = () => cycleEditorVol(i);
-    grid.appendChild(btn);
-  }
-}
-
-function cycleEditorVol(vol) {
-  const cur = editVolState[vol] || 'none';
-  editVolState[vol] = cur === 'none' ? 'owned' : cur === 'owned' ? 'wish' : 'none';
-  updateVolEditor();
-}
-
-window.setAllOwned = function() {
-  const latest = parseInt(document.getElementById('inputLatest').value) || 0;
-  for (let i = 1; i <= latest; i++) editVolState[i] = 'owned';
-  updateVolEditor();
-}
-
-window.clearAllOwned = function() {
-  editVolState = {};
-  updateVolEditor();
-}
-
-// ===================== MODAL =====================
-window.openAddModal = function() {
-  document.getElementById('modalTitle').textContent = 'マンガを追加';
-  document.getElementById('inputTitle').value = '';
-  document.getElementById('inputAuthor').value = '';
-  document.getElementById('inputLatest').value = '';
-  document.getElementById('inputLocation').value = '';
-  document.getElementById('inputNote').value = '';
-  document.getElementById('inputCoverUrl').value = '';
-  document.getElementById('editingId').value = '';
-  document.getElementById('btnDelete').style.display = 'none';
-  document.getElementById('searchResultArea').innerHTML = '<span style="color:#888;font-size:13px">タイトルを入力して「検索」を押すと表紙・著者情報が入ります</span>';
-  editVolState = {};
-  updateVolEditor();
-  document.getElementById('modalOverlay').classList.add('open');
-  setTimeout(() => document.getElementById('inputTitle').focus(), 300);
-}
-
-window.openEditModal = function(id) {
-  const m = mangas.find(x => x.id === id);
-  if (!m) return;
-
-  document.getElementById('modalTitle').textContent = '編集';
-  document.getElementById('inputTitle').value = m.title || '';
-  document.getElementById('inputAuthor').value = m.author || '';
-  document.getElementById('inputLatest').value = m.latest || '';
-  document.getElementById('inputLocation').value = m.location || '';
-  document.getElementById('inputNote').value = m.note || '';
-  document.getElementById('inputCoverUrl').value = m.coverUrl || '';
-  document.getElementById('editingId').value = id;
-  document.getElementById('btnDelete').style.display = 'block';
-
-  const area = document.getElementById('searchResultArea');
-  if (m.coverUrl) {
-    area.innerHTML = `<img src="${m.coverUrl}" class="search-result-cover"><div class="search-result-info"><div class="title">${escHtml(m.title)}</div><div class="meta">${escHtml(m.author || '')}</div></div>`;
-  } else {
-    area.innerHTML = '<span style="color:#888;font-size:13px">「検索」ボタンで書誌情報を更新できます</span>';
-  }
-
-  editVolState = { ...(m.volumes || {}) };
-  updateVolEditor();
-  document.getElementById('modalOverlay').classList.add('open');
-}
-
-window.closeModal = function() {
-  document.getElementById('modalOverlay').classList.remove('open');
-}
-
-window.handleOverlayClick = function(e) {
-  if (e.target === document.getElementById('modalOverlay')) closeModal();
-}
-
-// ===================== SAVE =====================
-window.saveManga = function() {
-  const title = document.getElementById('inputTitle').value.trim();
-  if (!title) { showToast('タイトルを入力してください'); document.getElementById('inputTitle').focus(); return; }
-
-  const editingId = document.getElementById('editingId').value;
-  const latest = parseInt(document.getElementById('inputLatest').value) || 0;
-  const volumes = { ...editVolState };
-
-  if (editingId) {
-    const idx = mangas.findIndex(x => x.id === editingId);
-    if (idx !== -1) {
-      mangas[idx] = {
-        ...mangas[idx],
-        title,
-        author: document.getElementById('inputAuthor').value.trim(),
-        latest,
-        location: document.getElementById('inputLocation').value.trim(),
-        note: document.getElementById('inputNote').value.trim(),
-        coverUrl: document.getElementById('inputCoverUrl').value,
-        volumes,
-        updatedAt: Date.now()
-      };
-    }
-  } else {
-    mangas.push({
-      id: 'manga_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-      title,
-      author: document.getElementById('inputAuthor').value.trim(),
-      latest,
-      location: document.getElementById('inputLocation').value.trim(),
-      note: document.getElementById('inputNote').value.trim(),
-      coverUrl: document.getElementById('inputCoverUrl').value,
-      volumes,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
+// Refresh latest
+window.refreshLatest = async id => {
+  const m = mangas.find(x=>x.id===id); if (!m||!m.title) { toast('タイトルが設定されていません'); return; }
+  toast('🔄 確認中...');
+  try {
+    const r = await fetch(`https://ndlsearch.ndl.go.jp/api/opensearch?q=${encodeURIComponent(m.title)}&cnt=30&mediatype=Book`);
+    const xml = new DOMParser().parseFromString(await r.text(), 'application/xml');
+    let max = 0;
+    xml.querySelectorAll('item title').forEach(t => {
+      const mt = t.textContent.match(/(\d+)\s*[巻冊]/);
+      if (mt) max = Math.max(max, parseInt(mt[1]));
     });
+    if (max > 0 && max !== m.latest) {
+      m.latest = max; m.updatedAt = Date.now();
+      update(ref(db,'mangas/'+id), {latest:max, updatedAt:m.updatedAt});
+      renderList(); renderStats(); toast(`最新刊を ${max}巻 に更新 ✓`);
+    } else {
+      toast(max>0 ? `最新は ${m.latest||max}巻 のままです` : '巻数情報が見つかりませんでした');
+    }
+  } catch { toast('取得に失敗しました'); }
+};
+
+// Vol editor
+function updateVE() {
+  const n = parseInt(document.getElementById('iLatest').value)||0;
+  const g = document.getElementById('vGrid'), h = document.getElementById('vHint');
+  if (n < 1) { g.innerHTML=''; h.textContent='「最新刊」に巻数を入力すると巻ごとに設定できます'; return; }
+  h.textContent='タップで「所持 → 欲しい → 未所持」と切り替え';
+  g.innerHTML = '';
+  for (let i=1;i<=n;i++) {
+    const s=evs[i]||'none', icon=s==='owned'?'✓':s==='wish'?'♡':'';
+    const b=document.createElement('button');
+    b.className=`ve ${s==='owned'?'o':s==='wish'?'w':''}`;
+    b.innerHTML=`<span class="vn">${i}</span><span class="vi">${icon}</span>`;
+    b.onclick=()=>{evs[i]=evs[i]==='none'||!evs[i]?'owned':evs[i]==='owned'?'wish':'none'; updateVE();};
+    g.appendChild(b);
   }
+}
+window.setAllOwned=()=>{ const n=parseInt(document.getElementById('iLatest').value)||0; for(let i=1;i<=n;i++) evs[i]='owned'; updateVE(); };
+window.clearAllVol=()=>{ evs={}; updateVE(); };
 
-  saveData(mangas);
-  closeModal();
-  showToast(editingId ? '更新しました ✓' : '追加しました ✓');
+// Modal
+function resetModal() {
+  ['iTitle','iAuthor','iLoc','iNote'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('iLatest').value='';
+  document.getElementById('iCover').value='';
+  document.getElementById('iId').value='';
+  document.getElementById('coverBox').style.display='none';
+  document.getElementById('sResults').className='s-results';
+  document.getElementById('sResults').innerHTML='';
+  document.getElementById('sBtn').textContent='🔍 書誌情報を検索';
+  evs={}; updateVE();
+}
+window.openAdd = () => {
+  resetModal();
+  document.getElementById('mtitle').textContent='追加';
+  document.getElementById('delSec').style.display='none';
+  document.getElementById('overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('iTitle').focus(), 350);
+};
+window.openEdit = id => {
+  const m = mangas.find(x=>x.id===id); if (!m) return;
+  resetModal();
+  document.getElementById('mtitle').textContent='編集';
+  document.getElementById('iTitle').value=m.title||'';
+  document.getElementById('iAuthor').value=m.author||'';
+  document.getElementById('iLatest').value=m.latest||'';
+  document.getElementById('iLoc').value=m.location||'';
+  document.getElementById('iNote').value=m.note||'';
+  document.getElementById('iCover').value=m.coverUrl||'';
+  document.getElementById('iId').value=id;
+  document.getElementById('delSec').style.display='block';
+  document.getElementById('sBtn').textContent='🔍 書誌情報を再検索';
+  if (m.coverUrl) {
+    document.getElementById('coverRow').innerHTML=`
+      <img class="s-cover-img" src="${e(m.coverUrl)}" onerror="this.style.display='none'">
+      <div class="s-cover-info"><div class="s-cover-title">${e(m.title)}</div><div class="s-cover-sub">${e(m.author||'')}</div></div>
+      <div class="s-clear" onclick="clearCover()">✕</div>`;
+    document.getElementById('coverBox').style.display='block';
+  }
+  evs={...(m.volumes||{})}; updateVE();
+  document.getElementById('overlay').classList.add('on');
+};
+window.closeModal = () => document.getElementById('overlay').classList.remove('on');
+window.handleOverlay = e => { if (e.target===document.getElementById('overlay')) closeModal(); };
+
+// Save
+window.saveManga = () => {
+  const title = document.getElementById('iTitle').value.trim();
+  if (!title) { toast('タイトルを入力してください'); document.getElementById('iTitle').focus(); return; }
+  const eid = document.getElementById('iId').value;
+  const latest = parseInt(document.getElementById('iLatest').value)||0;
+  const data = { title, author:document.getElementById('iAuthor').value.trim(), latest, location:document.getElementById('iLoc').value.trim(), note:document.getElementById('iNote').value.trim(), coverUrl:document.getElementById('iCover').value, volumes:{...evs}, updatedAt:Date.now() };
+  if (eid) {
+    const idx = mangas.findIndex(x=>x.id===eid);
+    if (idx!==-1) mangas[idx]={...mangas[idx],...data};
+  } else {
+    mangas.push({id:'m'+Date.now()+Math.random().toString(36).slice(2,5), createdAt:Date.now(), ...data});
+  }
+  save(mangas); closeModal(); toast(eid?'更新しました ✓':'追加しました ✓');
+};
+
+// Delete
+window.deleteManga = () => {
+  const id = document.getElementById('iId').value; if (!id) return;
+  if (!confirm('削除しますか？')) return;
+  mangas = mangas.filter(x=>x.id!==id);
+  remove(ref(db,'mangas/'+id));
+  renderList(); renderStats(); closeModal(); toast('削除しました');
+};
+
+// Utils
+function e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function ea(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('on');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2400);
 }
 
-// ===================== DELETE =====================
-window.deleteManga = function() {
-  const id = document.getElementById('editingId').value;
-  if (!id) return;
-  if (!confirm('この作品を削除しますか？')) return;
-  mangas = mangas.filter(x => x.id !== id);
-  remove(ref(db, 'mangas/' + id)).catch(e => showToast('削除エラー'));
-  renderList();
-  renderStats();
-  closeModal();
-  showToast('削除しました');
-}
-
-// ===================== UTILS =====================
-function escHtml(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function escAttr(s) {
-  return String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// Update vol editor when latest input changes
-document.getElementById('inputLatest').addEventListener('input', updateVolEditor);
-document.getElementById('searchInput').addEventListener('input', renderList);
-
-// ===================== INIT =====================
-// Data loads via Firebase onValue listener above
+document.getElementById('iLatest').addEventListener('input', updateVE);
 </script>
 
 </body>
