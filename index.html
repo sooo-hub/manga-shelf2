@@ -42,13 +42,14 @@ padding: calc(12px + env(safe-area-inset-top,0px)) 16px 10px;
 .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .app-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
 .btn-add {
-width: 36px; height: 36px;
-background: var(–blue); border: none; border-radius: 50%;
-color: white; font-size: 22px; cursor: pointer;
-display: flex; align-items: center; justify-content: center;
-box-shadow: 0 2px 8px rgba(0,122,255,0.3);
+background: var(–blue); border: none; border-radius: 20px;
+color: white; font-size: 15px; font-weight: 600; cursor: pointer;
+padding: 8px 16px;
+display: flex; align-items: center; justify-content: center; gap: 4px;
+box-shadow: 0 2px 10px rgba(0,122,255,0.4);
+white-space: nowrap;
 }
-.btn-add:active { opacity: 0.75; transform: scale(0.92); }
+.btn-add:active { opacity: 0.75; transform: scale(0.95); }
 .search-wrap { position: relative; }
 .search-wrap input {
 width: 100%; padding: 8px 12px 8px 32px;
@@ -256,7 +257,7 @@ display: flex; flex-direction: column; align-items: center; justify-content: cen
 <div class="header">
   <div class="header-row">
     <div class="app-title">本棚</div>
-    <button class="btn-add" onclick="openAdd()">＋</button>
+    <button class="btn-add" onclick="openAdd()">＋ 追加</button>
   </div>
   <div class="search-wrap">
     <span class="search-ico">🔍</span>
@@ -476,7 +477,7 @@ window.qToggle = (id, vol) => {
   renderList(); renderStats();
 };
 
-// NDL search
+// Google Books search (CORS対応済み)
 window.searchBooks = async () => {
   const title = document.getElementById('iTitle').value.trim();
   if (!title) { toast('タイトルを入力してください'); return; }
@@ -484,27 +485,32 @@ window.searchBooks = async () => {
   sb.textContent = '検索中...';
   sr.className = 's-results'; sr.innerHTML = '';
   try {
-    const r = await fetch(`https://ndlsearch.ndl.go.jp/api/opensearch?q=${encodeURIComponent(title)}&cnt=8&mediatype=Book`);
-    const xml = new DOMParser().parseFromString(await r.text(), 'application/xml');
-    const items = [...xml.querySelectorAll('item')];
+    // Google Books API - proper CORS support, great for Japanese manga
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(title)}&langRestrict=ja&maxResults=8&printType=books&orderBy=relevance`;
+    const r = await fetch(url);
+    const data = await r.json();
+    const items = (data.items || []).slice(0, 8);
     if (!items.length) {
       sr.innerHTML = '<div class="s-empty">見つかりませんでした<br>手動で入力してください</div>';
     } else {
       sr.innerHTML = items.map((it,i) => {
-        const t = it.querySelector('title')?.textContent||'';
-        const au = it.querySelector('*|creator')?.textContent||'';
-        const isbn = it.querySelector('*|identifier')?.textContent||'';
-        const img = isbn ? `https://ndlsearch.ndl.go.jp/thumbnail/${isbn.replace(/-/g,'')}` : '';
+        const info = it.volumeInfo || {};
+        const t = info.title || '';
+        const au = (info.authors || []).join(', ');
+        // Use thumbnail and upgrade to https
+        const img = (info.imageLinks?.thumbnail || '').replace('http://','https://');
         return `<div class="sri" onclick="pickBook(${i})" id="b${i}" data-t="${ea(t)}" data-a="${ea(au)}" data-c="${ea(img)}">
-          ${img?`<img class="sri-img" src="${e(img)}" onerror="this.outerHTML='<div class=sri-ph>📖</div>'">`:'<div class="sri-ph">📖</div>'}
+          ${img
+            ? `<img class="sri-img" src="${e(img)}" onerror="this.outerHTML='<div class=sri-ph>📖</div>'">`
+            : '<div class="sri-ph">📖</div>'}
           <div style="flex:1;min-width:0"><div class="sri-t">${e(t)}</div><div class="sri-s">${e(au)}</div></div>
           <div style="color:var(--sub);font-size:16px">›</div>
         </div>`;
       }).join('');
     }
     sr.classList.add('on');
-  } catch {
-    sr.innerHTML = '<div class="s-empty">⚠️ 取得できませんでした<br>手動で入力してください</div>';
+  } catch(err) {
+    sr.innerHTML = `<div class="s-empty">⚠️ 取得できませんでした<br>手動で入力してください</div>`;
     sr.classList.add('on');
   }
   sb.textContent = '🔍 書誌情報を検索';
@@ -535,11 +541,12 @@ window.refreshLatest = async id => {
   const m = mangas.find(x=>x.id===id); if (!m||!m.title) { toast('タイトルが設定されていません'); return; }
   toast('🔄 確認中...');
   try {
-    const r = await fetch(`https://ndlsearch.ndl.go.jp/api/opensearch?q=${encodeURIComponent(m.title)}&cnt=30&mediatype=Book`);
-    const xml = new DOMParser().parseFromString(await r.text(), 'application/xml');
+    const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(m.title)}&langRestrict=ja&maxResults=40&printType=books`);
+    const data = await r.json();
     let max = 0;
-    xml.querySelectorAll('item title').forEach(t => {
-      const mt = t.textContent.match(/(\d+)\s*[巻冊]/);
+    (data.items||[]).forEach(it => {
+      const t = it.volumeInfo?.title || '';
+      const mt = t.match(/(\d+)\s*[巻冊]/);
       if (mt) max = Math.max(max, parseInt(mt[1]));
     });
     if (max > 0 && max !== m.latest) {
